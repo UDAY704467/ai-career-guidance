@@ -3,12 +3,17 @@ import bcrypt
 import json
 import os
 from PyPDF2 import PdfReader
+from datetime import datetime
 
 # -------------------------------
 # USER AUTH SYSTEM
 # -------------------------------
 
 USER_DB = "users.json"
+RESPONSES_DIR = "responses"
+
+if not os.path.exists(RESPONSES_DIR):
+    os.makedirs(RESPONSES_DIR)
 
 def load_users():
     if os.path.exists(USER_DB):
@@ -50,63 +55,84 @@ def login_signup():
             if username in users and check_password(password, users[username]):
                 st.session_state["user"] = username
                 st.sidebar.success(f"Welcome back, {username}!")
-                st.rerun()  # ✅ Updated from experimental
+                st.rerun()
             else:
                 st.sidebar.error("Invalid credentials!")
-
-# -------------------------------
-# STOP IF USER NOT LOGGED IN
-# -------------------------------
 
 if "user" not in st.session_state:
     login_signup()
     st.stop()
 
 # -------------------------------
-# MAIN APP STARTS HERE
+# MAIN APP UI
 # -------------------------------
 
 st.title("🔍 AI Career Guidance System")
 
-st.success(f"Hello, {st.session_state['user']}! Let's discover your ideal career path.")
+st.success(f"Hello, {st.session_state['user']}! Let's explore your ideal career path.")
 
-# 🔓 Logout Button
 if st.button("Logout"):
     del st.session_state["user"]
     st.success("You have been logged out.")
-    st.rerun()  # ✅ Updated from experimental
+    st.rerun()
 
-# -----------------------------------
-# SECTION 1: Career Questionnaire
-# -----------------------------------
+# -------------------------------
+# TABS
+# -------------------------------
 
-st.header("🚀 Career Guidance Questionnaire")
+tab1, tab2, tab3 = st.tabs(["🧠 Career Quiz", "📄 Resume Analysis", "📥 Report & Save"])
 
-interests = st.multiselect("What are your interests?", ["Technology", "Science", "Art", "Finance", "Healthcare"])
-activities = st.multiselect("Preferred work activities?", ["Working with people", "Analyzing data", "Creating content", "Managing projects"])
-strengths = st.multiselect("Your strengths?", ["Communication", "Problem-solving", "Leadership", "Creativity"])
-work_values = st.multiselect("What do you value most in a job?", ["Job Security", "High Salary", "Work-Life Balance", "Helping Others"])
+# -------------------------------
+# TAB 1: CAREER QUIZ
+# -------------------------------
 
-# -----------------------------------
-# SECTION 2: Personality Quiz
-# -----------------------------------
+with tab1:
+    st.header("🚀 Career Guidance Questionnaire")
 
-st.header("🧠 Personality Insights")
+    interests = st.multiselect("What are your interests?", ["Technology", "Science", "Art", "Finance", "Healthcare"])
+    activities = st.multiselect("Preferred work activities?", ["Working with people", "Analyzing data", "Creating content", "Managing projects"])
+    strengths = st.multiselect("Your strengths?", ["Communication", "Problem-solving", "Leadership", "Creativity"])
+    work_values = st.multiselect("What do you value most in a job?", ["Job Security", "High Salary", "Work-Life Balance", "Helping Others"])
 
-q1 = st.radio("Do you enjoy leading teams?", ["Yes", "No", "Sometimes"])
-q2 = st.radio("Are you more analytical or creative?", ["Analytical", "Creative", "Both"])
-q3 = st.radio("Do you like working with technology?", ["Yes", "No", "Neutral"])
+    st.header("🧠 Personality Quiz")
+    q1 = st.radio("Do you enjoy leading teams?", ["Yes", "No", "Sometimes"])
+    q2 = st.radio("Are you more analytical or creative?", ["Analytical", "Creative", "Both"])
+    q3 = st.radio("Do you like working with technology?", ["Yes", "No", "Neutral"])
 
-# -----------------------------------
-# SECTION 3: Career Suggestions
-# -----------------------------------
+    st.header("📊 Skill Confidence (Rate 1–10)")
+    tech = st.slider("Tech Skills", 1, 10, 5)
+    comm = st.slider("Communication", 1, 10, 5)
+    lead = st.slider("Leadership", 1, 10, 5)
 
-if st.button("Generate Career Recommendation"):
-    st.subheader("🎯 Recommended Careers")
+# -------------------------------
+# TAB 2: RESUME UPLOAD & ANALYSIS
+# -------------------------------
+
+with tab2:
+    st.header("📄 Upload Your Resume (PDF)")
+
+    uploaded_file = st.file_uploader("Upload your resume (PDF only)", type=["pdf"])
+    resume_text = ""
+
+    if uploaded_file is not None:
+        try:
+            reader = PdfReader(uploaded_file)
+            for page in reader.pages:
+                resume_text += page.extract_text()
+            st.success("Resume uploaded and text extracted!")
+            st.text_area("📃 Resume Preview:", resume_text[:2000], height=200)
+        except Exception as e:
+            st.error(f"Failed to extract text: {e}")
+
+# -------------------------------
+# TAB 3: REPORT & RECOMMENDATIONS
+# -------------------------------
+
+with tab3:
+    st.header("🎯 Career Recommendations")
 
     career_suggestions = []
 
-    # From career questions
     if "Technology" in interests and "Problem-solving" in strengths:
         career_suggestions.append("Software Developer")
     if "Finance" in interests and "Analyzing data" in activities:
@@ -115,8 +141,6 @@ if st.button("Generate Career Recommendation"):
         career_suggestions.append("Graphic Designer")
     if "Helping Others" in work_values and "Communication" in strengths:
         career_suggestions.append("HR Manager")
-
-    # From personality quiz
     if q1 == "Yes" and q2 == "Analytical":
         career_suggestions.append("Project Manager")
     if q2 == "Creative":
@@ -124,27 +148,52 @@ if st.button("Generate Career Recommendation"):
     if q3 == "Yes":
         career_suggestions.append("IT Consultant")
 
+    if resume_text:
+        if "Python" in resume_text or "Machine Learning" in resume_text:
+            career_suggestions.append("Data Scientist")
+        if "Sales" in resume_text or "CRM" in resume_text:
+            career_suggestions.append("Sales Executive")
+
     if career_suggestions:
+        st.success("We recommend exploring these roles:")
         for career in set(career_suggestions):
             st.markdown(f"- **{career}**")
     else:
-        st.warning("No clear matches found. Try adjusting your answers.")
+        st.warning("No strong matches found. Try adjusting your answers.")
 
-# -----------------------------------
-# SECTION 4: Resume Upload
-# -----------------------------------
+    st.subheader("📥 Download Career Report")
 
-st.header("📄 Upload Your Resume (PDF)")
+    if st.button("Download Report"):
+        report_text = f"""Career Report for {st.session_state['user']}
 
-uploaded_file = st.file_uploader("Upload your resume (PDF only)", type=["pdf"])
+Interests: {interests}
+Activities: {activities}
+Strengths: {strengths}
+Work Values: {work_values}
+Personality: {q1}, {q2}, {q3}
+Resume Keywords Found: {', '.join(set(resume_text.split()) & {'Python', 'ML', 'Sales', 'CRM'}) if resume_text else 'None'}
 
-if uploaded_file is not None:
-    try:
-        reader = PdfReader(uploaded_file)
-        resume_text = ""
-        for page in reader.pages:
-            resume_text += page.extract_text()
-        st.success("Resume uploaded and text extracted!")
-        st.text_area("📄 Extracted Resume Text:", resume_text[:2000], height=200)
-    except Exception as e:
-        st.error(f"Error reading PDF: {e}")
+Recommended Careers:
+{chr(10).join(['- ' + c for c in set(career_suggestions)])}
+"""
+        st.download_button("📄 Click to Download", report_text, file_name="career_report.txt")
+
+    st.subheader("💾 Save Response for Later")
+
+    if st.button("Save Progress"):
+        user_file = os.path.join(RESPONSES_DIR, f"{st.session_state['user']}_{datetime.now().strftime('%Y%m%d%H%M%S')}.json")
+        data = {
+            "user": st.session_state["user"],
+            "interests": interests,
+            "activities": activities,
+            "strengths": strengths,
+            "work_values": work_values,
+            "personality": [q1, q2, q3],
+            "skills": {"Tech": tech, "Communication": comm, "Leadership": lead},
+            "resume_keywords": list(set(resume_text.split()) & {"Python", "ML", "Sales", "CRM"}) if resume_text else [],
+            "suggestions": list(set(career_suggestions)),
+            "timestamp": datetime.now().isoformat()
+        }
+        with open(user_file, "w") as f:
+            json.dump(data, f, indent=2)
+        st.success(f"Responses saved as `{user_file}`")
