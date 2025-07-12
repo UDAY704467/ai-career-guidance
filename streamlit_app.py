@@ -2,30 +2,30 @@ import streamlit as st
 import bcrypt
 import json
 import os
+from PyPDF2 import PdfReader
 
+# -------------------------------
+# USER AUTH SYSTEM (Local JSON DB)
+# -------------------------------
 
 USER_DB = "users.json"
 
-# Load user database
 def load_users():
     if os.path.exists(USER_DB):
         with open(USER_DB, "r") as f:
             return json.load(f)
     return {}
 
-# Save user database
 def save_users(users):
     with open(USER_DB, "w") as f:
         json.dump(users, f)
 
-# Password hashing
 def hash_password(password):
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 def check_password(password, hashed):
     return bcrypt.checkpw(password.encode(), hashed.encode())
 
-# Main login/signup logic
 def login_signup():
     users = load_users()
     option = st.sidebar.selectbox("Login or Sign Up", ["Login", "Sign Up"])
@@ -53,160 +53,51 @@ def login_signup():
             else:
                 st.sidebar.error("Invalid credentials!")
 
-# Run login/signup only if user not logged in
+# -------------------------------
+# AUTH CHECK
+# -------------------------------
+
 if "user" not in st.session_state:
     login_signup()
     st.stop()
-if "user" not in st.session_state:
-    login_signup()
-    st.stop()
-# --- Main app content starts here ---
+
+# -------------------------------
+# MAIN APP LOGIC
+# -------------------------------
+
 if "user" in st.session_state:
-    # Form questions like:
-interests = st.multiselect("What are your interests?", [...])
-activities = st.multiselect("Preferred activities?", [...])
-strengths = st.multiselect("Your strengths?", [...])
-
-# Resume uploader:
-uploaded_file = st.file_uploader("Upload Resume", type="pdf")
-
     st.success(f"Hello, {st.session_state['user']}! Let's find your ideal career path.")
 
-    # 🎯 Move your existing app content here 👇
-    
     st.header("🚀 Career Guidance Questionnaire")
 
-    # All your form inputs (interests, strengths, etc.)
-    # Resume upload block
-    # Recommendations
+    interests = st.multiselect("What are your interests?", ["Technology", "Science", "Art", "Finance", "Healthcare"])
+    activities = st.multiselect("Preferred work activities?", ["Working with people", "Analyzing data", "Creating content", "Managing projects"])
+    strengths = st.multiselect("Your strengths?", ["Communication", "Problem-solving", "Leadership", "Creativity"])
+    work_values = st.multiselect("What do you value most in a job?", ["Job Security", "High Salary", "Work-Life Balance", "Helping Others"])
 
+    if st.button("Generate Career Recommendation"):
+        st.subheader("🎯 Recommended Careers (Example)")
+        st.write("Based on your answers, you might consider:")
+        if "Technology" in interests:
+            st.markdown("- **Software Developer**")
+        if "Finance" in interests:
+            st.markdown("- **Financial Analyst**")
+        if "Art" in interests:
+            st.markdown("- **UX Designer**")
 
-# ---- PAGE CONFIG ----
-st.set_page_config(page_title="AI Career Guidance", layout="centered")
+    # -------------------------------
+    # RESUME UPLOAD
+    # -------------------------------
+    st.header("📄 Upload Your Resume (PDF)")
 
-# ---- TITLE ----
-st.title("🎓 AI-Enhanced Career Guidance System")
-st.markdown("Find your ideal career path through personalized AI-driven suggestions.")
-
-# ---- USER INFO ----
-st.header("📋 Step 1: Tell us about yourself")
-
-name = st.text_input("Your Name")
-
-if name:
-    st.subheader(f"Welcome, {name}! Let’s understand your career preferences.")
-
-    st.header("🎯 Career Interests & Preferences")
-
-    # Interests
-    interests = st.multiselect(
-        "What subjects or areas do you enjoy?",
-        ["Mathematics", "Biology", "Art & Design", "Computer Science", "Business Studies", "Psychology", "Law", "Social Work", "Marketing", "Engineering"]
-    )
-
-    activities = st.multiselect(
-        "Which activities do you enjoy doing?",
-        ["Coding", "Writing", "Designing", "Public Speaking", "Solving puzzles", "Teaching", "Team leading", "Helping others"]
-    )
-
-    # Strengths
-    strengths = st.multiselect(
-        "What are your top 3 strengths?",
-        ["Analytical Thinking", "Creativity", "Communication", "Leadership", "Empathy", "Attention to Detail", "Problem Solving"]
-    )
-
-    # Work values
-    work_values = st.selectbox(
-        "What matters most to you in your future job?",
-        ["High Income", "Job Stability", "Work-Life Balance", "Fast Career Growth", "Social Impact"]
-    )
-
-    # Preferred Industries
-    industries = st.multiselect(
-        "Which industries are you most interested in?",
-        ["Information Technology", "Finance", "Healthcare", "Marketing & Advertising", "Education", "Consulting", "Entrepreneurship"]
-    )
-
-    # Preview user inputs
-    st.markdown("### 📝 Your Preferences Summary")
-    st.write("**Interests:**", interests)
-    st.write("**Activities:**", activities)
-    st.write("**Strengths:**", strengths)
-    st.write("**Work Values:**", work_values)
-    st.write("**Preferred Industries:**", industries)
-
-    import pdfplumber
-
-st.header("📄 Upload Your Resume (Optional)")
-
-uploaded_file = st.file_uploader("Upload your resume as a PDF", type="pdf")
-
-resume_text = ""
-
-if uploaded_file is not None:
-    try:
-        with pdfplumber.open(uploaded_file) as pdf:
+    uploaded_file = st.file_uploader("Upload your resume (PDF format)", type=["pdf"])
+    if uploaded_file is not None:
+        st.success("Resume uploaded successfully!")
+        try:
+            pdf = PdfReader(uploaded_file)
+            text = ""
             for page in pdf.pages:
-                resume_text += page.extract_text() + "\n"
-
-        st.success("✅ Resume uploaded and processed successfully!")
-        st.markdown("### Extracted Resume Text:")
-        st.write(resume_text[:1000])  # Limit display to first 1000 characters
-
-    except Exception as e:
-        st.error(f"Error reading PDF: {e}")
-
-
-age = st.number_input("Your Age", min_value=13, max_value=60)
-education = st.selectbox(
-    "Current Education Level",
-    ["High School", "Undergraduate", "Postgraduate", "Working Professional"]
-)
-
-# ---- APTITUDE & INTEREST ----
-aptitude = st.multiselect(
-    "What are your strong aptitudes?",
-    ["Analytical Thinking", "Creativity", "Problem Solving", "Leadership", "Communication", "Coding", "Design Thinking"]
-)
-
-interests = st.text_area("What are your career interests or long-term goals?")
-skills = st.text_area("List your top 3 skills (technical or non-technical)")
-experience = st.text_area("Mention any work, internship, or project experience")
-
-# ---- LEARNING & FUTURE STYLE ----
-learning_style = st.radio(
-    "What type of learning do you prefer?",
-    ["Hands-on/Practical", "Theoretical", "Visual/Creative", "Collaborative/Team-based"]
-)
-
-future_pref = st.selectbox(
-    "What kind of future job do you imagine for yourself?",
-    ["Corporate Job", "Startup/Freelance", "Government Sector", "Research/Academia", "Entrepreneurship"]
-)
-
-# ---- CAREER SUGGESTION LOGIC ----
-if st.button("🎯 Get Career Recommendations"):
-    st.subheader(f"Hi {name}, here are some personalized suggestions for you:")
-
-    if "Analytical Thinking" in aptitude or "data" in interests.lower():
-        st.success("📊 Recommended: Data Analyst, Business Analyst, AI/ML Engineer")
-    
-    if "Creativity" in aptitude or "design" in interests.lower():
-        st.success("🎨 Recommended: UI/UX Designer, Graphic Designer, Creative Director")
-    
-    if "Leadership" in aptitude or future_pref == "Entrepreneurship":
-        st.success("🚀 Recommended: Startup Founder, Product Manager, Business Consultant")
-    
-    if "Coding" in aptitude or "software" in interests.lower():
-        st.success("💻 Recommended: Software Developer, Web Developer, App Developer")
-    
-    if "Communication" in aptitude or "marketing" in interests.lower():
-        st.success("📢 Recommended: Marketing Manager, PR Specialist, Content Creator")
-    
-    if education == "Postgraduate" and "research" in interests.lower():
-        st.success("🔬 Recommended: Research Scientist, Professor, Academic Researcher")
-
-    st.info("✅ Based on your input, we suggest you explore certification platforms like Coursera, LinkedIn Learning, and Internshala to get started.")
-
-    st.caption("Note: These suggestions are based on your responses and simplified logic. An advanced AI version can further enhance personalization.")
-
+                text += page.extract_text()
+            st.text_area("Extracted Resume Text", text, height=200)
+        except Exception as e:
+            st.error(f"Failed to extract text: {e}")
