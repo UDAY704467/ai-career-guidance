@@ -2,7 +2,8 @@ import streamlit as st
 import bcrypt
 import json
 import os
-st.success(f"Hello, {st.session_state['user']}! Let's find your ideal career path.")
+if "user" in st.session_state:
+    st.success(f"Hello, {st.session_state['user']}! Let's find your ideal career path.")
 
 
 USER_DB = "users.json"
