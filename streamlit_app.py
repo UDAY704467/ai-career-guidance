@@ -1,4 +1,64 @@
 import streamlit as st
+import bcrypt
+import json
+import os
+st.success(f"Hello, {st.session_state['user']}! Let's find your ideal career path.")
+
+
+USER_DB = "users.json"
+
+# Load user database
+def load_users():
+    if os.path.exists(USER_DB):
+        with open(USER_DB, "r") as f:
+            return json.load(f)
+    return {}
+
+# Save user database
+def save_users(users):
+    with open(USER_DB, "w") as f:
+        json.dump(users, f)
+
+# Password hashing
+def hash_password(password):
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+def check_password(password, hashed):
+    return bcrypt.checkpw(password.encode(), hashed.encode())
+
+# Main login/signup logic
+def login_signup():
+    users = load_users()
+    option = st.sidebar.selectbox("Login or Sign Up", ["Login", "Sign Up"])
+
+    if option == "Sign Up":
+        st.sidebar.subheader("📝 Create an Account")
+        new_user = st.sidebar.text_input("Username")
+        new_pass = st.sidebar.text_input("Password", type="password")
+        if st.sidebar.button("Register"):
+            if new_user in users:
+                st.sidebar.warning("User already exists!")
+            else:
+                users[new_user] = hash_password(new_pass)
+                save_users(users)
+                st.sidebar.success("Registered! Please log in.")
+
+    elif option == "Login":
+        st.sidebar.subheader("🔐 Login")
+        username = st.sidebar.text_input("Username")
+        password = st.sidebar.text_input("Password", type="password")
+        if st.sidebar.button("Login"):
+            if username in users and check_password(password, users[username]):
+                st.session_state["user"] = username
+                st.sidebar.success(f"Welcome back, {username}!")
+            else:
+                st.sidebar.error("Invalid credentials!")
+
+# Run login/signup only if user not logged in
+if "user" not in st.session_state:
+    login_signup()
+    st.stop()
+
 
 # ---- PAGE CONFIG ----
 st.set_page_config(page_title="AI Career Guidance", layout="centered")
