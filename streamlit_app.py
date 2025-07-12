@@ -4,6 +4,10 @@ import json
 import os
 from PyPDF2 import PdfReader
 
+# -------------------------------
+# USER AUTH SYSTEM
+# -------------------------------
+
 USER_DB = "users.json"
 
 def load_users():
@@ -46,23 +50,35 @@ def login_signup():
             if username in users and check_password(password, users[username]):
                 st.session_state["user"] = username
                 st.sidebar.success(f"Welcome back, {username}!")
-                st.experimental_rerun()  # 🔁 Important!
+                st.experimental_rerun()
             else:
                 st.sidebar.error("Invalid credentials!")
 
-# ----------------------
-# STOP if user not logged in
-# ----------------------
+# -------------------------------
+# STOP IF USER NOT LOGGED IN
+# -------------------------------
+
 if "user" not in st.session_state:
     login_signup()
     st.stop()
 
-# ----------------------
+# -------------------------------
 # MAIN APP STARTS HERE
-# ----------------------
+# -------------------------------
 
-# ✅ This block only runs after login
-st.success(f"Hello, {st.session_state['user']}! Let's find your ideal career path.")
+st.title("🔍 AI Career Guidance System")
+
+st.success(f"Hello, {st.session_state['user']}! Let's discover your ideal career path.")
+
+# 🔓 Logout Button
+if st.button("Logout"):
+    del st.session_state["user"]
+    st.success("You have been logged out.")
+    st.experimental_rerun()
+
+# -----------------------------------
+# SECTION 1: Career Questionnaire
+# -----------------------------------
 
 st.header("🚀 Career Guidance Questionnaire")
 
@@ -71,24 +87,64 @@ activities = st.multiselect("Preferred work activities?", ["Working with people"
 strengths = st.multiselect("Your strengths?", ["Communication", "Problem-solving", "Leadership", "Creativity"])
 work_values = st.multiselect("What do you value most in a job?", ["Job Security", "High Salary", "Work-Life Balance", "Helping Others"])
 
+# -----------------------------------
+# SECTION 2: Personality Quiz
+# -----------------------------------
+
+st.header("🧠 Personality Insights")
+
+q1 = st.radio("Do you enjoy leading teams?", ["Yes", "No", "Sometimes"])
+q2 = st.radio("Are you more analytical or creative?", ["Analytical", "Creative", "Both"])
+q3 = st.radio("Do you like working with technology?", ["Yes", "No", "Neutral"])
+
+# -----------------------------------
+# SECTION 3: Career Suggestions
+# -----------------------------------
+
 if st.button("Generate Career Recommendation"):
     st.subheader("🎯 Recommended Careers")
-    if "Technology" in interests:
-        st.markdown("- **Software Engineer**")
-    if "Finance" in interests:
-        st.markdown("- **Financial Analyst**")
-    if "Art" in interests:
-        st.markdown("- **UX Designer**")
 
-# Resume Upload
-st.header("📄 Upload Your Resume")
+    career_suggestions = []
+
+    # From career questions
+    if "Technology" in interests and "Problem-solving" in strengths:
+        career_suggestions.append("Software Developer")
+    if "Finance" in interests and "Analyzing data" in activities:
+        career_suggestions.append("Financial Analyst")
+    if "Art" in interests and "Creativity" in strengths:
+        career_suggestions.append("Graphic Designer")
+    if "Helping Others" in work_values and "Communication" in strengths:
+        career_suggestions.append("HR Manager")
+
+    # From personality quiz
+    if q1 == "Yes" and q2 == "Analytical":
+        career_suggestions.append("Project Manager")
+    if q2 == "Creative":
+        career_suggestions.append("Marketing Strategist")
+    if q3 == "Yes":
+        career_suggestions.append("IT Consultant")
+
+    if career_suggestions:
+        for career in set(career_suggestions):
+            st.markdown(f"- **{career}**")
+    else:
+        st.warning("No clear matches found. Try adjusting your answers.")
+
+# -----------------------------------
+# SECTION 4: Resume Upload
+# -----------------------------------
+
+st.header("📄 Upload Your Resume (PDF)")
+
 uploaded_file = st.file_uploader("Upload your resume (PDF only)", type=["pdf"])
+
 if uploaded_file is not None:
     try:
         reader = PdfReader(uploaded_file)
-        text = ""
+        resume_text = ""
         for page in reader.pages:
-            text += page.extract_text()
-        st.text_area("Extracted Resume Text", text, height=200)
+            resume_text += page.extract_text()
+        st.success("Resume uploaded and text extracted!")
+        st.text_area("📄 Extracted Resume Text:", resume_text[:2000], height=200)
     except Exception as e:
-        st.error(f"Could not read PDF: {e}")
+        st.error(f"Error reading PDF: {e}")
