@@ -5,10 +5,6 @@ import os
 from PyPDF2 import PdfReader
 from datetime import datetime
 
-# -------------------------------
-# USER AUTH SYSTEM
-# -------------------------------
-
 USER_DB = "users.json"
 RESPONSES_DIR = "responses"
 
@@ -63,28 +59,18 @@ if "user" not in st.session_state:
     login_signup()
     st.stop()
 
-# -------------------------------
-# MAIN APP UI
-# -------------------------------
-
 st.title("🔍 AI Career Guidance System")
 
-st.success(f"Hello, {st.session_state['user']}! Let's explore your ideal career path.")
+st.success(f"Hello, {st.session_state['user']}! Let's discover your ideal career path.")
 
 if st.button("Logout"):
     del st.session_state["user"]
     st.success("You have been logged out.")
     st.rerun()
 
-# -------------------------------
-# TABS
-# -------------------------------
-
 tab1, tab2, tab3 = st.tabs(["🧠 Career Quiz", "📄 Resume Analysis", "📥 Report & Save"])
 
-# -------------------------------
-# TAB 1: CAREER QUIZ
-# -------------------------------
+# ------------- TAB 1: Career Quiz ----------------
 
 with tab1:
     st.header("🚀 Career Guidance Questionnaire")
@@ -104,9 +90,7 @@ with tab1:
     comm = st.slider("Communication", 1, 10, 5)
     lead = st.slider("Leadership", 1, 10, 5)
 
-# -------------------------------
-# TAB 2: RESUME UPLOAD & ANALYSIS
-# -------------------------------
+# ------------- TAB 2: Resume Upload --------------
 
 with tab2:
     st.header("📄 Upload Your Resume (PDF)")
@@ -124,42 +108,44 @@ with tab2:
         except Exception as e:
             st.error(f"Failed to extract text: {e}")
 
-# -------------------------------
-# TAB 3: REPORT & RECOMMENDATIONS
-# -------------------------------
+# ------------- TAB 3: Recommendations -------------
 
 with tab3:
     st.header("🎯 Career Recommendations")
 
-    career_suggestions = []
-
-    if "Technology" in interests and "Problem-solving" in strengths:
-        career_suggestions.append("Software Developer")
-    if "Finance" in interests and "Analyzing data" in activities:
-        career_suggestions.append("Financial Analyst")
-    if "Art" in interests and "Creativity" in strengths:
-        career_suggestions.append("Graphic Designer")
-    if "Helping Others" in work_values and "Communication" in strengths:
-        career_suggestions.append("HR Manager")
-    if q1 == "Yes" and q2 == "Analytical":
-        career_suggestions.append("Project Manager")
-    if q2 == "Creative":
-        career_suggestions.append("Marketing Strategist")
-    if q3 == "Yes":
-        career_suggestions.append("IT Consultant")
-
-    if resume_text:
-        if "Python" in resume_text or "Machine Learning" in resume_text:
-            career_suggestions.append("Data Scientist")
-        if "Sales" in resume_text or "CRM" in resume_text:
-            career_suggestions.append("Sales Executive")
-
-    if career_suggestions:
-        st.success("We recommend exploring these roles:")
-        for career in set(career_suggestions):
-            st.markdown(f"- **{career}**")
+    # 🛡️ Prevent recommendations if no input given
+    if not interests and not activities and not strengths and not work_values and not resume_text:
+        st.warning("⚠️ Please complete the quiz or upload a resume to get recommendations.")
     else:
-        st.warning("No strong matches found. Try adjusting your answers.")
+        career_suggestions = []
+
+        if "Technology" in interests and "Problem-solving" in strengths:
+            career_suggestions.append("Software Developer")
+        if "Finance" in interests and "Analyzing data" in activities:
+            career_suggestions.append("Financial Analyst")
+        if "Art" in interests and "Creativity" in strengths:
+            career_suggestions.append("Graphic Designer")
+        if "Helping Others" in work_values and "Communication" in strengths:
+            career_suggestions.append("HR Manager")
+        if q1 == "Yes" and q2 == "Analytical":
+            career_suggestions.append("Project Manager")
+        if q2 == "Creative":
+            career_suggestions.append("Marketing Strategist")
+        if q3 == "Yes":
+            career_suggestions.append("IT Consultant")
+
+        if resume_text:
+            if "Python" in resume_text or "Machine Learning" in resume_text:
+                career_suggestions.append("Data Scientist")
+            if "Sales" in resume_text or "CRM" in resume_text:
+                career_suggestions.append("Sales Executive")
+
+        if career_suggestions:
+            st.success("We recommend exploring these roles:")
+            for career in set(career_suggestions):
+                st.markdown(f"- **{career}**")
+        else:
+            st.warning("No strong matches found. Try adjusting your answers.")
 
     st.subheader("📥 Download Career Report")
 
