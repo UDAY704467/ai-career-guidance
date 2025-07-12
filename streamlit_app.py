@@ -50,7 +50,7 @@ def login_signup():
             if username in users and check_password(password, users[username]):
                 st.session_state["user"] = username
                 st.sidebar.success(f"Welcome back, {username}!")
-                st.experimental_rerun()
+                st.rerun()  # ✅ Updated from experimental
             else:
                 st.sidebar.error("Invalid credentials!")
 
@@ -74,7 +74,7 @@ st.success(f"Hello, {st.session_state['user']}! Let's discover your ideal career
 if st.button("Logout"):
     del st.session_state["user"]
     st.success("You have been logged out.")
-    st.experimental_rerun()
+    st.rerun()  # ✅ Updated from experimental
 
 # -----------------------------------
 # SECTION 1: Career Questionnaire
