@@ -2,8 +2,6 @@ import streamlit as st
 import bcrypt
 import json
 import os
-if "user" in st.session_state:
-    st.success(f"Hello, {st.session_state['user']}! Let's find your ideal career path.")
 
 
 USER_DB = "users.json"
@@ -59,6 +57,28 @@ def login_signup():
 if "user" not in st.session_state:
     login_signup()
     st.stop()
+if "user" not in st.session_state:
+    login_signup()
+    st.stop()
+# --- Main app content starts here ---
+if "user" in st.session_state:
+    # Form questions like:
+interests = st.multiselect("What are your interests?", [...])
+activities = st.multiselect("Preferred activities?", [...])
+strengths = st.multiselect("Your strengths?", [...])
+
+# Resume uploader:
+uploaded_file = st.file_uploader("Upload Resume", type="pdf")
+
+    st.success(f"Hello, {st.session_state['user']}! Let's find your ideal career path.")
+
+    # 🎯 Move your existing app content here 👇
+    
+    st.header("🚀 Career Guidance Questionnaire")
+
+    # All your form inputs (interests, strengths, etc.)
+    # Resume upload block
+    # Recommendations
 
 
 # ---- PAGE CONFIG ----
