@@ -54,6 +54,28 @@ if name:
     st.write("**Work Values:**", work_values)
     st.write("**Preferred Industries:**", industries)
 
+    import pdfplumber
+
+st.header("📄 Upload Your Resume (Optional)")
+
+uploaded_file = st.file_uploader("Upload your resume as a PDF", type="pdf")
+
+resume_text = ""
+
+if uploaded_file is not None:
+    try:
+        with pdfplumber.open(uploaded_file) as pdf:
+            for page in pdf.pages:
+                resume_text += page.extract_text() + "\n"
+
+        st.success("✅ Resume uploaded and processed successfully!")
+        st.markdown("### Extracted Resume Text:")
+        st.write(resume_text[:1000])  # Limit display to first 1000 characters
+
+    except Exception as e:
+        st.error(f"Error reading PDF: {e}")
+
+
 age = st.number_input("Your Age", min_value=13, max_value=60)
 education = st.selectbox(
     "Current Education Level",
