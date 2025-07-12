@@ -11,6 +11,49 @@ st.markdown("Find your ideal career path through personalized AI-driven suggesti
 st.header("📋 Step 1: Tell us about yourself")
 
 name = st.text_input("Your Name")
+
+if name:
+    st.subheader(f"Welcome, {name}! Let’s understand your career preferences.")
+
+    st.header("🎯 Career Interests & Preferences")
+
+    # Interests
+    interests = st.multiselect(
+        "What subjects or areas do you enjoy?",
+        ["Mathematics", "Biology", "Art & Design", "Computer Science", "Business Studies", "Psychology", "Law", "Social Work", "Marketing", "Engineering"]
+    )
+
+    activities = st.multiselect(
+        "Which activities do you enjoy doing?",
+        ["Coding", "Writing", "Designing", "Public Speaking", "Solving puzzles", "Teaching", "Team leading", "Helping others"]
+    )
+
+    # Strengths
+    strengths = st.multiselect(
+        "What are your top 3 strengths?",
+        ["Analytical Thinking", "Creativity", "Communication", "Leadership", "Empathy", "Attention to Detail", "Problem Solving"]
+    )
+
+    # Work values
+    work_values = st.selectbox(
+        "What matters most to you in your future job?",
+        ["High Income", "Job Stability", "Work-Life Balance", "Fast Career Growth", "Social Impact"]
+    )
+
+    # Preferred Industries
+    industries = st.multiselect(
+        "Which industries are you most interested in?",
+        ["Information Technology", "Finance", "Healthcare", "Marketing & Advertising", "Education", "Consulting", "Entrepreneurship"]
+    )
+
+    # Preview user inputs
+    st.markdown("### 📝 Your Preferences Summary")
+    st.write("**Interests:**", interests)
+    st.write("**Activities:**", activities)
+    st.write("**Strengths:**", strengths)
+    st.write("**Work Values:**", work_values)
+    st.write("**Preferred Industries:**", industries)
+
 age = st.number_input("Your Age", min_value=13, max_value=60)
 education = st.selectbox(
     "Current Education Level",
